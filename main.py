@@ -9,7 +9,7 @@ from pysummarization.abstractabledoc.top_n_rank_abstractor import TopNRankAbstra
 import time, threading
 import re, datetime, os
 from translate import translate
-
+from bs4 import BeautifulSoup
 extractor = ExtractContent()
 opt = {"threshold": 50}
 extractor.set_option(opt)
@@ -44,6 +44,10 @@ def getBody(link, txtname):
                    }
 
         res = requests.get(link, timeout=30, proxies=proxies)
+        html = res.content.decode('utf-8')
+        soup = BeautifulSoup(html, 'lxml')
+        images = soup.findAll('img')
+
         extractor.analyse(res.text)
         text, title = extractor.as_text()
         title = re.sub('[-|:|\||\[|\(|\{].*', '', title)
@@ -61,8 +65,9 @@ def getBody(link, txtname):
             with open(txtname,'a+') as f:
                 f.write('===================================================')
                 f.write('\n')
+                f.write('## ')
                 f.write(title_translate)
-                f.write('---------------------------------------------------')
+
                 f.write('\n')
                 f.write(text_translate)
                 # f.write('____________________________________________________')
@@ -92,11 +97,24 @@ def getBUSINESSRss():
     for entry in feed.entries:
         link = entry.get('link')
         getBody(link, txtname)
-
+def getRss(topic):
+    # BUSINESS TECHNOLOGY
+    rssUrl = 'https://news.google.com/news/rss/headlines/section/topic/'+topic
+    rssLang = '?hl=en-US&gl=US&ceid=US:en'
+    feed = feedparser.parse(rssUrl + rssLang)
+    outpath = r'D:\dengkaiyuan\txt'
+    txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + topic+'.md')
+    for entry in feed.entries:
+        link = entry.get('link')
+        getBody(link, txtname)
 def main():
-    t1 = threading.Thread(target=getTECHNOLOGYRss)
-    t2 = threading.Thread(target=getBUSINESSRss)
+    t1 = threading.Thread(target=getRss('SCIENCE'))
+    t2 = threading.Thread(target=getRss('WORLD'))
+    t3 = threading.Thread(target=getBUSINESSRss())
+    t4 = threading.Thread(target=getRss('TECHNOLOGY'))
     t1.start()
     t2.start()
+    t3.start()
+    t4.start()
 if __name__ == '__main__':
     main()
