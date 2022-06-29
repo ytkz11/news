@@ -102,7 +102,9 @@ def getRss(topic):
     rssUrl = 'https://news.google.com/news/rss/headlines/section/topic/'+topic
     rssLang = '?hl=en-US&gl=US&ceid=US:en'
     feed = feedparser.parse(rssUrl + rssLang)
-    outpath = r'D:\dengkaiyuan\txt'
+    outpath = os.path.split(os.path.realpath(__file__))[0] + r'//archives'
+    if os.path.exists(outpath)==0:
+        os.makedirs(outpath)
     txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + topic+'.md')
     for entry in feed.entries:
         link = entry.get('link')
@@ -110,7 +112,7 @@ def getRss(topic):
 def main():
     t1 = threading.Thread(target=getRss('SCIENCE'))
     t2 = threading.Thread(target=getRss('WORLD'))
-    t3 = threading.Thread(target=getBUSINESSRss())
+    t3 = threading.Thread(target=getRss('BUSINESS'))
     t4 = threading.Thread(target=getRss('TECHNOLOGY'))
     t1.start()
     t2.start()
