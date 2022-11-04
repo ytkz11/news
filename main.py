@@ -8,7 +8,7 @@ from pysummarization.tokenizabledoc.simple_tokenizer import SimpleTokenizer
 from pysummarization.abstractabledoc.top_n_rank_abstractor import TopNRankAbstractor
 import time, threading
 import re, datetime, os
-from translate import translate
+from translate import translate_main
 from bs4 import BeautifulSoup
 extractor = ExtractContent()
 opt = {"threshold": 50}
@@ -49,12 +49,20 @@ def getBody(link, txtname):
         images = soup.findAll('img')
 
         extractor.analyse(res.text)
-        text, title = extractor.as_text()
+        texts, title = extractor.as_text()
         title = re.sub('[-|:|\||\[|\(|\{].*', '', title)
-        text = re.sub('&.*?;', '', text)
-        text = getSummary(text)
-        title_translate = translate(title)
-        text_translate = translate(text)
+        texts = re.sub('&.*?;', '', texts)
+        texts = getSummary(texts)
+        textpiecewise =texts.split('\n')  # 分割
+        title_translate = translate_main(title)
+        text_translate = ''
+        try:
+            for text in textpiecewise:
+                if text!='':
+                    text_translate = text_translate + translate_main(text)
+        except:
+            print('error')
+
         print('===================================================')
         print('title:' + title_translate)
         print('===================================================')
@@ -76,27 +84,6 @@ def getBody(link, txtname):
     except Exception as e:
         print(e)
 
-
-def getTECHNOLOGYRss():
-    # BUSINESS TECHNOLOGY
-    rssUrl = 'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY'
-    rssLang = '?hl=en-US&gl=US&ceid=US:en'
-    feed = feedparser.parse(rssUrl + rssLang)
-    outpath = r'D:\dengkaiyuan\txt'
-    txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + 'Technology.md')
-    for entry in feed.entries:
-        link = entry.get('link')
-        getBody(link, txtname)
-def getBUSINESSRss():
-    # BUSINESS TECHNOLOGY
-    rssUrl = 'https://news.google.com/news/rss/headlines/section/topic/BUSINESS'
-    rssLang = '?hl=en-US&gl=US&ceid=US:en'
-    feed = feedparser.parse(rssUrl + rssLang)
-    outpath = r'D:\dengkaiyuan\txt'
-    txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + 'Business.md')
-    for entry in feed.entries:
-        link = entry.get('link')
-        getBody(link, txtname)
 def getRss(topic):
     # BUSINESS TECHNOLOGY
     rssUrl = 'https://news.google.com/news/rss/headlines/section/topic/'+topic
@@ -105,7 +92,7 @@ def getRss(topic):
     outpath = os.path.split(os.path.realpath(__file__))[0] + r'//archives'
     if os.path.exists(outpath)==0:
         os.makedirs(outpath)
-    txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + topic+'.md')
+    txtname = os.path.join(outpath, datetime.datetime.now().strftime("%Y-%m-%d") + topic+'.md')
     for entry in feed.entries:
         link = entry.get('link')
         getBody(link, txtname)
