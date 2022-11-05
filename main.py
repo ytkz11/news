@@ -101,9 +101,10 @@ def main():
     t2 = threading.Thread(target=getRss('WORLD'))
     t3 = threading.Thread(target=getRss('BUSINESS'))
     t4 = threading.Thread(target=getRss('TECHNOLOGY'))
+    t4.start()
     t1.start()
     t2.start()
     t3.start()
-    t4.start()
+
 if __name__ == '__main__':
     main()
